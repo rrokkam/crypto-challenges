@@ -67,4 +67,13 @@ mod tests {
         let vec = Vec::from(Base64("TWFu".to_string()));
         assert_eq!(vec, "Man".as_bytes().to_vec());
     }
+
+    #[test]
+    fn hex_to_base64() {
+        let hex = Hex("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d".to_string());
+        let base64 =
+            Base64("SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t".to_string());
+
+        assert_eq!(Base64::from(Vec::from(hex)).0, base64.0);
+    }
 }
