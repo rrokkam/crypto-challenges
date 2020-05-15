@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 base64 = "0.12"
-hex = "0.3"
+hex-literal = "0.2"

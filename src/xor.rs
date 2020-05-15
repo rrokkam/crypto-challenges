@@ -1,11 +1,17 @@
+use std::iter::FromIterator;
+
 #[allow(dead_code)]
-fn fixed_xor(first: Vec<u8>, second: Vec<u8>) -> Vec<u8> {
-    if first.len() != second.len() {
-        panic!("Can't XOR two bytestrings of different length");
-    }
+fn fixed_xor<T, U>(first: T, second: T) -> U
+where
+    T: IntoIterator<Item = u8>,
+    U: FromIterator<u8>,
+{
+    //    if first.len() != second.len() {
+    //        panic!("Can't XOR two bytestrings of different length");
+    //    }
     first
-        .iter()
-        .zip(second.iter())
+        .into_iter()
+        .zip(second.into_iter())
         .map(|(a, b)| a ^ b)
         .collect()
 }
@@ -13,15 +19,13 @@ fn fixed_xor(first: Vec<u8>, second: Vec<u8>) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hex::FromHex;
+    use hex_literal::hex;
 
     #[test]
     fn test_fixed_xor() {
-        let first = Vec::from_hex("1c0111001f010100061a024b53535009181c").unwrap();
-        let second = Vec::from_hex("686974207468652062756c6c277320657965").unwrap();
-        assert_eq!(
-            fixed_xor(first, second),
-            Vec::from_hex("746865206b696420646f6e277420706c6179").unwrap()
-        );
+        let first = hex!("1c0111001f010100061a024b53535009181c").to_vec();
+        let second = hex!("686974207468652062756c6c277320657965").to_vec();
+        let xored: Vec<u8> = fixed_xor(first, second);
+        assert_eq!(xored, hex!("746865206b696420646f6e277420706c6179"));
     }
 }
