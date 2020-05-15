@@ -1,14 +1,28 @@
 pub struct Hex(String);
 
+impl Hex {
+    fn char_to_raw(hexchar: u8) -> u8 {
+        match hexchar {
+            b'0'..=b'9' => hexchar - b'0',
+            b'a'..=b'f' => hexchar - b'a' + 10,
+            _ => panic!("Invalid hexchar"),
+        }
+    }
+}
+
 impl From<Vec<u8>> for Hex {
     fn from(bytes: Vec<u8>) -> Self {
-        Hex("".to_string())
+        Hex(bytes.iter().map(|byte| format!("{:02x}", byte)).collect())
     }
 }
 
 impl From<Hex> for Vec<u8> {
     fn from(hex: Hex) -> Self {
-        Vec::new()
+        hex.0
+            .as_bytes()
+            .chunks(2)
+            .map(|pair| Hex::char_to_raw(pair[0]) << 4 | Hex::char_to_raw(pair[1]) & 0xF)
+            .collect()
     }
 }
 
