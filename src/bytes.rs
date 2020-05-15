@@ -26,6 +26,20 @@ impl From<Hex> for Vec<u8> {
     }
 }
 
+pub struct Base64(String);
+
+impl From<Vec<u8>> for Base64 {
+    fn from(bytes: Vec<u8>) -> Self {
+        Base64(base64::encode(bytes))
+    }
+}
+
+impl From<Base64> for Vec<u8> {
+    fn from(base: Base64) -> Self {
+        base64::decode(base.0).unwrap()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -40,5 +54,17 @@ mod tests {
     fn vec_from_hex() {
         let vec = Vec::from(Hex("636f".to_string()));
         assert_eq!(vec, vec![99, 111]);
+    }
+
+    #[test]
+    fn base64_from_vec() {
+        let base64 = Base64::from("Man".as_bytes().to_vec());
+        assert_eq!(base64.0, "TWFu".to_string());
+    }
+
+    #[test]
+    fn vec_from_base64() {
+        let vec = Vec::from(Base64("TWFu".to_string()));
+        assert_eq!(vec, "Man".as_bytes().to_vec());
     }
 }
