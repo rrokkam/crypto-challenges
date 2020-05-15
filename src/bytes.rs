@@ -1,3 +1,4 @@
+#[derive(Debug, PartialEq, Eq)]
 pub struct Hex(String);
 
 impl Hex {
@@ -30,6 +31,7 @@ impl From<Hex> for Vec<u8> {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct Base64(String);
 
 impl Base64 {
