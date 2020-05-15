@@ -1,5 +1,8 @@
 #[allow(dead_code)]
 fn fixed_xor(first: Vec<u8>, second: Vec<u8>) -> Vec<u8> {
+    if first.len() != second.len() {
+        panic!("Can't XOR two bytestrings of different length");
+    }
     first
         .iter()
         .zip(second.iter())
