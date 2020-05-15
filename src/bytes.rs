@@ -1,6 +1,10 @@
 pub struct Hex(String);
 
 impl Hex {
+    pub fn new(string: String) -> Self {
+        Hex(string)
+    }
+
     fn char_to_raw(hexchar: u8) -> u8 {
         match hexchar {
             b'0'..=b'9' => hexchar - b'0',
@@ -27,6 +31,12 @@ impl From<Hex> for Vec<u8> {
 }
 
 pub struct Base64(String);
+
+impl Base64 {
+    pub fn new(string: String) -> Self {
+        Base64(string)
+    }
+}
 
 impl From<Vec<u8>> for Base64 {
     fn from(bytes: Vec<u8>) -> Self {
