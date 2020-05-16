@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fs;
 
 fn fixed_xor(first: Vec<u8>, second: Vec<u8>) -> Vec<u8> {
     first
@@ -61,5 +62,15 @@ mod tests {
         let second = hex!("686974207468652062756c6c277320657965").to_vec();
         let xored = fixed_xor(first, second);
         assert_eq!(xored, hex!("746865206b696420646f6e277420706c6179").to_vec());
+    }
+
+    #[test]
+    fn test_decrypt_single_byte_xor() {
+        let ciphertext =
+            hex!("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736").to_vec();
+        let corpus = fs::read_to_string("ulysses.txt").unwrap();
+        let plaintext_guess = decrypt_single_byte_xor(ciphertext, &corpus);
+        assert_eq!(plaintext_guess, "Cooking MC's like a pound of bacon");
+        println!("Decrpyted to: {}", plaintext_guess);
     }
 }
