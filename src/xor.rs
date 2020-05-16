@@ -8,7 +8,7 @@ fn fixed_xor(first: Vec<u8>, second: Vec<u8>) -> Vec<u8> {
         .collect()
 }
 
-fn char_frequencies(corpus: String) -> HashMap<char, f64> {
+fn char_frequencies(corpus: &str) -> HashMap<char, f64> {
     corpus
         .chars()
         .fold(HashMap::new(), |mut acc, c| {
@@ -20,12 +20,34 @@ fn char_frequencies(corpus: String) -> HashMap<char, f64> {
         .collect()
 }
 
-fn score(text: String, freqs: HashMap<char, f64>) -> f64 {
-    let mut score = 0.0;
-    for c in text.chars() {
-        score += freqs.get(&c).unwrap_or(&0.0);
+fn score(text: &str, freqs: &HashMap<char, f64>) -> f64 {
+    text.chars()
+        .map(|c| freqs.get(&c).unwrap_or(&0.0))
+        .sum::<f64>()
+        / text.chars().count() as f64
+}
+
+fn single_byte_xor(buffer: Vec<u8>, c: u8) -> Vec<u8> {
+    buffer.iter().map(|b| b ^ c).collect()
+}
+
+fn decrypt_single_byte_xor(ciphertext: Vec<u8>, corpus: &str) -> String {
+    let freqs = char_frequencies(corpus);
+
+    let mut max = 0.0;
+    let mut best = String::new();
+    for c in u8::MIN..=u8::MAX {
+        let xored = single_byte_xor(ciphertext.clone(), c);
+        if let Ok(utf8) = String::from_utf8(xored) {
+            let score = score(&utf8, &freqs);
+            if score > max {
+                max = score;
+                best = utf8;
+            }
+        }
     }
-    score
+
+    best
 }
 
 #[cfg(test)]
