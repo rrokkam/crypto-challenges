@@ -41,6 +41,29 @@ fn decrypt_single_byte_xor(ciphertext: Vec<u8>, corpus: &str) -> (f64, String) {
         .expect("No single byte xor produced a valid UTF8-encoded string")
 }
 
+fn find_single_byte_xor(ciphertexts: Vec<Vec<u8>>, corpus: &str) -> String {
+    let freqs = char_frequencies(corpus);
+    ciphertexts
+        .iter()
+        .map(|text| {
+            (
+                score(
+                    std::str::from_utf8(text.clone().as_slice()).unwrap(),
+                    &freqs,
+                ),
+                decrypt_single_byte_xor(text.clone(), corpus),
+            )
+        })
+        .max_by(|a, b| {
+            ((a.1).0 - a.0)
+                .partial_cmp(&((b.1).0 - b.0))
+                .expect("Got Inf or NaN as a score")
+        })
+        .unwrap()
+        .1
+         .1
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -73,5 +96,19 @@ mod tests {
         let mut vec = freqs.iter().collect::<Vec<_>>();
         vec.sort_by(|a, b| (a.1).partial_cmp(b.1).unwrap());
         println!("{:#?}", vec);
+    }
+
+    #[test]
+    fn test_find_single_byte_xor() {
+        let ciphertexts = fs::read("single_byte_xored.txt")
+            .unwrap()
+            .split(|c| *c == b'\n')
+            .map(|v| v.to_vec())
+            .collect();
+        let corpus = fs::read_to_string("ulysses.txt")
+            .expect("No corpus found! Add a file called ulysses.txt in the crate root.");
+        let text = find_single_byte_xor(ciphertexts, &corpus);
+        println!("{:#?}", text);
+        panic!("test")
     }
 }
