@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::fs;
 
 fn fixed_xor(first: Vec<u8>, second: Vec<u8>) -> Vec<u8> {
     first
@@ -32,29 +31,21 @@ fn single_byte_xor(buffer: Vec<u8>, c: u8) -> Vec<u8> {
     buffer.iter().map(|b| b ^ c).collect()
 }
 
-fn decrypt_single_byte_xor(ciphertext: Vec<u8>, corpus: &str) -> String {
+fn decrypt_single_byte_xor(ciphertext: Vec<u8>, corpus: &str) -> (f64, String) {
     let freqs = char_frequencies(corpus);
-
-    let mut max = 0.0;
-    let mut best = String::new();
-    for c in u8::MIN..=u8::MAX {
-        let xored = single_byte_xor(ciphertext.clone(), c);
-        if let Ok(utf8) = String::from_utf8(xored) {
-            let score = score(&utf8, &freqs);
-            if score > max {
-                max = score;
-                best = utf8;
-            }
-        }
-    }
-
-    best
+    (u8::MIN..=u8::MAX)
+        .map(|c| String::from_utf8(single_byte_xor(ciphertext.clone(), c)))
+        .filter_map(Result::ok)
+        .map(|text| (score(&text, &freqs), text))
+        .max_by(|a, b| a.0.partial_cmp(&b.0).expect("Got Inf or NaN as a score"))
+        .expect("No single byte xor produced a valid UTF8-encoded string")
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use hex_literal::hex;
+    use std::fs;
 
     #[test]
     fn test_fixed_xor() {
@@ -68,9 +59,19 @@ mod tests {
     fn test_decrypt_single_byte_xor() {
         let ciphertext =
             hex!("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736").to_vec();
-        let corpus = fs::read_to_string("ulysses.txt").unwrap();
-        let plaintext_guess = decrypt_single_byte_xor(ciphertext, &corpus);
+        let corpus = fs::read_to_string("ulysses.txt")
+            .expect("No corpus found! Add a file called ulysses.txt in the crate root.");
+        let (_, plaintext_guess) = decrypt_single_byte_xor(ciphertext, &corpus);
         assert_eq!(plaintext_guess, "Cooking MC's like a pound of bacon");
-        println!("Decrpyted to: {}", plaintext_guess);
+    }
+
+    #[test]
+    fn test_char_freqencies() {
+        let corpus = fs::read_to_string("ulysses.txt")
+            .expect("No corpus found! Add a file called ulysses.txt in the crate root.");
+        let freqs = char_frequencies(&corpus);
+        let mut vec = freqs.iter().collect::<Vec<_>>();
+        vec.sort_by(|a, b| (a.1).partial_cmp(b.1).unwrap());
+        println!("{:#?}", vec);
     }
 }
