@@ -1,4 +1,5 @@
 use crate::score;
+use std::collections::HashMap;
 
 fn fixed_xor(first: &[u8], second: &[u8]) -> Vec<u8> {
     first
@@ -12,32 +13,22 @@ fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
     buffer.iter().map(|b| b ^ c).collect()
 }
 
-fn decrypt_single_byte_xor(ciphertext: &[u8], corpus: &str) -> (f64, String) {
-    let freqs = score::frequencies(corpus);
+fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &HashMap<char, f64>) -> (f64, String) {
     (u8::MIN..=u8::MAX)
         .map(|c| String::from_utf8(single_byte_xor(ciphertext, c)))
         .filter_map(Result::ok)
-        .map(|text| (score::score(&text, &freqs), text))
+        .map(|text| (score::score(&text, freqs), text))
         .max_by(|a, b| a.0.partial_cmp(&b.0).expect("Got Inf or NaN as a score"))
         .expect("No single byte xor produced a valid UTF8-encoded string")
 }
 
-fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, corpus: &str) -> String {
-    let freqs = score::frequencies(corpus);
+fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &HashMap<char, f64>) -> String {
     ciphertexts
         .iter()
-        .map(|&text| {
-            let score = score::score(std::str::from_utf8(text).unwrap(), &freqs);
-            (score, decrypt_single_byte_xor(text, corpus))
-        })
-        .max_by(|a, b| {
-            ((a.1).0 - a.0)
-                .partial_cmp(&((b.1).0 - b.0))
-                .expect("Got Inf or NaN as a score")
-        })
+        .map(|&ciphertext| decrypt_single_byte_xor(ciphertext, freqs))
+        .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
         .unwrap()
         .1
-         .1
 }
 
 #[cfg(test)]
@@ -51,6 +42,7 @@ mod tests {
         let first = hex!("1c0111001f010100061a024b53535009181c");
         let second = hex!("686974207468652062756c6c277320657965");
         let xored = fixed_xor(&first, &second);
+
         assert_eq!(xored, hex!("746865206b696420646f6e277420706c6179"));
     }
 
@@ -60,18 +52,21 @@ mod tests {
             hex!("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
         let corpus = fs::read_to_string("ulysses.txt")
             .expect("No corpus found! Add a file called ulysses.txt in the crate root.");
-        let (_, plaintext_guess) = decrypt_single_byte_xor(&ciphertext, &corpus);
+        let freqs = score::frequencies(&corpus);
+
+        let (_, plaintext_guess) = decrypt_single_byte_xor(&ciphertext, &freqs);
         assert_eq!(plaintext_guess, "Cooking MC's like a pound of bacon");
     }
 
     #[test]
-    #[ignore]
     fn test_find_single_byte_xor() {
         let ciphertexts = fs::read("single_byte_xored.txt").unwrap();
         let ciphertexts = ciphertexts.split(|&c| c == b'\n').collect();
         let corpus = fs::read_to_string("ulysses.txt")
             .expect("No corpus found! Add a file called ulysses.txt in the crate root.");
-        let text = find_single_byte_xor(ciphertexts, &corpus);
+        let freqs = score::frequencies(&corpus);
+
+        let text = find_single_byte_xor(ciphertexts, &freqs);
         println!("{:#?}", text);
     }
 }
