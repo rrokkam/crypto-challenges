@@ -50,8 +50,17 @@ mod tests {
         let corpus = fs::read_to_string(CORPUS_FILE_PATH).expect("Corpus not found");
         let freqs = char_frequencies(&corpus);
 
-        let mut vec = freqs.iter().collect::<Vec<_>>();
-        vec.sort_by(|a, b| (a.1).partial_cmp(b.1).unwrap());
-        println!("{:#?}", vec);
+        for (_, v) in freqs.iter() {
+            assert!(v.is_normal());
+            assert!(v.is_sign_positive())
+        }
+
+        let most_common_char = freqs
+            .iter()
+            .max_by(|a, b| (a.1).partial_cmp(&b.1).unwrap())
+            .unwrap()
+            .0;
+
+        assert_eq!(most_common_char, &' ');
     }
 }
