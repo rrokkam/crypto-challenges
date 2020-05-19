@@ -34,22 +34,27 @@ fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &HashMap<char, f64>) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hex_literal::hex;
+    use hex;
+    use hex_literal;
     use std::fs;
 
     #[test]
     fn test_fixed_xor() {
-        let first = hex!("1c0111001f010100061a024b53535009181c");
-        let second = hex!("686974207468652062756c6c277320657965");
+        let first = hex_literal::hex!("1c0111001f010100061a024b53535009181c");
+        let second = hex_literal::hex!("686974207468652062756c6c277320657965");
         let xored = fixed_xor(&first, &second);
 
-        assert_eq!(xored, hex!("746865206b696420646f6e277420706c6179"));
+        assert_eq!(
+            xored,
+            hex_literal::hex!("746865206b696420646f6e277420706c6179")
+        );
     }
 
     #[test]
     fn test_decrypt_single_byte_xor() {
-        let ciphertext =
-            hex!("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
+        let ciphertext = hex_literal::hex!(
+            "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
+        );
         let corpus = fs::read_to_string("ulysses.txt")
             .expect("No corpus found! Add a file called ulysses.txt in the crate root.");
         let freqs = score::frequencies(&corpus);
@@ -61,12 +66,19 @@ mod tests {
     #[test]
     fn test_find_single_byte_xor() {
         let ciphertexts = fs::read("single_byte_xored.txt").unwrap();
-        let ciphertexts = ciphertexts.split(|&c| c == b'\n').collect();
+
+        let texts: Vec<Vec<u8>> = ciphertexts
+            .split(|&c| c == b'\n')
+            .map(|ciphertext| hex::decode(ciphertext).unwrap())
+            .collect();
+        let texts = texts.iter().map(|item| item.as_slice()).collect();
+
         let corpus = fs::read_to_string("ulysses.txt")
             .expect("No corpus found! Add a file called ulysses.txt in the crate root.");
         let freqs = score::frequencies(&corpus);
 
-        let text = find_single_byte_xor(ciphertexts, &freqs);
-        println!("{:#?}", text);
+        let plaintext_guess = find_single_byte_xor(texts, &freqs);
+        assert_eq!(plaintext_guess, "Now that the party is jumping");
+        //        println!("{:#?}", text);
     }
 }
