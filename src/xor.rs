@@ -38,6 +38,8 @@ mod tests {
     use hex_literal;
     use std::fs;
 
+    const CORPUS_FILE_PATH: &str = "ulysses.txt";
+
     #[test]
     fn test_fixed_xor() {
         let first = hex_literal::hex!("1c0111001f010100061a024b53535009181c");
@@ -55,8 +57,7 @@ mod tests {
         let ciphertext = hex_literal::hex!(
             "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
         );
-        let corpus = fs::read_to_string("ulysses.txt")
-            .expect("No corpus found! Add a file called ulysses.txt in the crate root.");
+        let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
         let freqs = score::frequencies(&corpus);
 
         let (_, plaintext_guess) = decrypt_single_byte_xor(&ciphertext, &freqs);
@@ -74,12 +75,10 @@ mod tests {
             .collect();
         let texts = texts.iter().map(|item| item.as_slice()).collect();
 
-        let corpus = fs::read_to_string("ulysses.txt")
-            .expect("No corpus found! Add a file called ulysses.txt in the crate root.");
+        let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
         let freqs = score::frequencies(&corpus);
 
         let plaintext_guess = find_single_byte_xor(texts, &freqs);
         assert_eq!(plaintext_guess, "Now that the party is jumping");
-        //        println!("{:#?}", text);
     }
 }
