@@ -27,11 +27,11 @@ mod tests {
     const CORPUS_FILE_PATH: &str = "ulysses.txt";
 
     #[test]
-    fn frequencies_from_empty() {
+    fn frequencies_from_empty_corpus() {
         let corpus = "";
         let freqs = frequencies(&corpus);
 
-        assert_eq!(freqs.len(), 0);
+        assert_eq!(freqs, HashMap::new());
     }
 
     #[test]
@@ -67,5 +67,28 @@ mod tests {
             .0;
 
         assert_eq!(most_common_char, &' ');
+    }
+
+    #[test]
+    fn score_with_empty_text() {
+        let text = "";
+        let corpus = "🦀doing cryptopals in rust🦀";
+        let freqs = frequencies(&corpus);
+
+        assert!(score(text, &freqs).is_nan());
+
+        let corpus = "";
+        let freqs = frequencies(&corpus);
+
+        assert!(score(text, &freqs).is_nan())
+    }
+
+    #[test]
+    fn score_with_empty_corpus() {
+        let text = "🦀 is a crab emoji";
+        let corpus = "";
+        let freqs = frequencies(&corpus);
+
+        assert_eq!(score(text, &freqs), 0.0);
     }
 }
