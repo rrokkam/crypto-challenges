@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-pub fn char_frequencies(corpus: &str) -> HashMap<char, f64> {
+pub fn frequencies(corpus: &str) -> HashMap<char, f64> {
     corpus
         .chars()
         .fold(HashMap::new(), |mut acc, c| {
@@ -12,7 +12,7 @@ pub fn char_frequencies(corpus: &str) -> HashMap<char, f64> {
         .collect()
 }
 
-pub fn score_text(text: &str, freqs: &HashMap<char, f64>) -> f64 {
+pub fn score(text: &str, freqs: &HashMap<char, f64>) -> f64 {
     text.chars()
         .map(|c| *freqs.get(&c).unwrap_or(&0.0))
         .sum::<f64>()
@@ -27,17 +27,17 @@ mod tests {
     const CORPUS_FILE_PATH: &str = "ulysses.txt";
 
     #[test]
-    fn char_frequencies_from_empty() {
+    fn frequencies_from_empty() {
         let corpus = "";
-        let freqs = char_frequencies(&corpus);
+        let freqs = frequencies(&corpus);
 
         assert_eq!(freqs.len(), 0);
     }
 
     #[test]
-    fn char_frequencies_from_string() {
+    fn frequencies_from_small_corpus() {
         let corpus = "🦀doing cryptopals in rust🦀";
-        let freqs = char_frequencies(&corpus);
+        let freqs = frequencies(&corpus);
 
         assert_eq!(freqs.len(), 16);
         assert_eq!(*freqs.get(&' ').unwrap(), 3.0 / corpus.len() as f64);
@@ -46,9 +46,9 @@ mod tests {
     }
 
     #[test]
-    fn char_freqencies_from_file() {
+    fn freqencies_from_large_corpus() {
         let corpus = fs::read_to_string(CORPUS_FILE_PATH).expect("Corpus not found");
-        let freqs = char_frequencies(&corpus);
+        let freqs = frequencies(&corpus);
 
         for (_, v) in freqs.iter() {
             assert!(v.is_normal());

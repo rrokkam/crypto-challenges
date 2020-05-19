@@ -13,22 +13,22 @@ fn single_byte_xor(buffer: Vec<u8>, c: u8) -> Vec<u8> {
 }
 
 fn decrypt_single_byte_xor(ciphertext: Vec<u8>, corpus: &str) -> (f64, String) {
-    let freqs = score::char_frequencies(corpus);
+    let freqs = score::frequencies(corpus);
     (u8::MIN..=u8::MAX)
         .map(|c| String::from_utf8(single_byte_xor(ciphertext.clone(), c)))
         .filter_map(Result::ok)
-        .map(|text| (score::score_text(&text, &freqs), text))
+        .map(|text| (score::score(&text, &freqs), text))
         .max_by(|a, b| a.0.partial_cmp(&b.0).expect("Got Inf or NaN as a score"))
         .expect("No single byte xor produced a valid UTF8-encoded string")
 }
 
 fn find_single_byte_xor(ciphertexts: Vec<Vec<u8>>, corpus: &str) -> String {
-    let freqs = score::char_frequencies(corpus);
+    let freqs = score::frequencies(corpus);
     ciphertexts
         .iter()
         .map(|text| {
             (
-                score::score_text(
+                score::score(
                     std::str::from_utf8(text.clone().as_slice()).unwrap(),
                     &freqs,
                 ),
