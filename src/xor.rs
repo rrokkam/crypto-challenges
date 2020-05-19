@@ -22,16 +22,13 @@ fn decrypt_single_byte_xor(ciphertext: &[u8], corpus: &str) -> (f64, String) {
         .expect("No single byte xor produced a valid UTF8-encoded string")
 }
 
-fn find_single_byte_xor(ciphertexts: Vec<Vec<u8>>, corpus: &str) -> String {
+fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, corpus: &str) -> String {
     let freqs = score::frequencies(corpus);
     ciphertexts
         .iter()
-        .map(|text| {
-            let score = score::score(
-                std::str::from_utf8(text.clone().as_slice()).unwrap(),
-                &freqs,
-            );
-            (score, decrypt_single_byte_xor(&text, corpus))
+        .map(|&text| {
+            let score = score::score(std::str::from_utf8(text).unwrap(), &freqs);
+            (score, decrypt_single_byte_xor(text, corpus))
         })
         .max_by(|a, b| {
             ((a.1).0 - a.0)
@@ -70,11 +67,8 @@ mod tests {
     #[test]
     #[ignore]
     fn test_find_single_byte_xor() {
-        let ciphertexts = fs::read("single_byte_xored.txt")
-            .unwrap()
-            .split(|c| *c == b'\n')
-            .map(|v| v.to_vec())
-            .collect();
+        let ciphertexts = fs::read("single_byte_xored.txt").unwrap();
+        let ciphertexts = ciphertexts.split(|&c| c == b'\n').collect();
         let corpus = fs::read_to_string("ulysses.txt")
             .expect("No corpus found! Add a file called ulysses.txt in the crate root.");
         let text = find_single_byte_xor(ciphertexts, &corpus);

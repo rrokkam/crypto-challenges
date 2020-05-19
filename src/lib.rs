@@ -1,4 +1,3 @@
-
 mod bytes;
-mod xor;
 mod score;
+mod xor;
