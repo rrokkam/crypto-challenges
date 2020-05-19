@@ -15,7 +15,7 @@ fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
 fn decrypt_single_byte_xor(ciphertext: &[u8], corpus: &str) -> (f64, String) {
     let freqs = score::frequencies(corpus);
     (u8::MIN..=u8::MAX)
-        .map(|c| String::from_utf8(single_byte_xor(ciphertext.clone(), c)))
+        .map(|c| String::from_utf8(single_byte_xor(ciphertext, c)))
         .filter_map(Result::ok)
         .map(|text| (score::score(&text, &freqs), text))
         .max_by(|a, b| a.0.partial_cmp(&b.0).expect("Got Inf or NaN as a score"))
@@ -51,7 +51,7 @@ mod tests {
         let first = hex!("1c0111001f010100061a024b53535009181c");
         let second = hex!("686974207468652062756c6c277320657965");
         let xored = fixed_xor(&first, &second);
-        assert_eq!(xored, hex!("746865206b696420646f6e277420706c6179").to_vec());
+        assert_eq!(xored, hex!("746865206b696420646f6e277420706c6179"));
     }
 
     #[test]
