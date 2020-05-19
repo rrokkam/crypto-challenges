@@ -13,10 +13,15 @@ pub fn frequencies(corpus: &str) -> HashMap<char, f64> {
 }
 
 pub fn score(text: &str, freqs: &HashMap<char, f64>) -> f64 {
+    let text_len = text.chars().count();
+    if text_len == 0 {
+        return 0.0;
+    }
+
     text.chars()
         .map(|c| *freqs.get(&c).unwrap_or(&0.0))
         .sum::<f64>()
-        / text.chars().count() as f64
+        / text_len as f64
 }
 
 #[cfg(test)]
@@ -75,12 +80,7 @@ mod tests {
         let corpus = "🦀doing cryptopals in rust🦀";
         let freqs = frequencies(&corpus);
 
-        assert!(score(text, &freqs).is_nan());
-
-        let corpus = "";
-        let freqs = frequencies(&corpus);
-
-        assert!(score(text, &freqs).is_nan())
+        assert_eq!(score(text, &freqs), 0.0);
     }
 
     #[test]

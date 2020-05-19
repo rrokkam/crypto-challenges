@@ -18,7 +18,7 @@ fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &HashMap<char, f64>) -> (f6
         .map(|c| String::from_utf8(single_byte_xor(ciphertext, c)))
         .filter_map(Result::ok)
         .map(|text| (score::score(&text, freqs), text))
-        .max_by(|a, b| a.0.partial_cmp(&b.0).expect("Got Inf or NaN as a score"))
+        .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
         .expect("No single byte xor produced a valid UTF8-encoded string")
 }
 
@@ -64,6 +64,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_find_single_byte_xor() {
         let ciphertexts = fs::read("single_byte_xored.txt").unwrap();
 
