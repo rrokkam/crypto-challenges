@@ -27,16 +27,29 @@ mod tests {
     const CORPUS_FILE_PATH: &str = "ulysses.txt";
 
     #[test]
-    fn char_frequencies_with_empty_corpus() {
+    fn char_frequencies_from_empty() {
         let corpus = "";
         let freqs = char_frequencies(&corpus);
+
+        assert_eq!(freqs.len(), 0);
     }
 
+    #[test]
+    fn char_frequencies_from_string() {
+        let corpus = "🦀doing cryptopals in rust🦀";
+        let freqs = char_frequencies(&corpus);
+
+        assert_eq!(freqs.len(), 16);
+        assert_eq!(*freqs.get(&' ').unwrap(), 3.0 / corpus.len() as f64);
+        assert_eq!(*freqs.get(&'🦀').unwrap(), 2.0 / corpus.len() as f64);
+        assert_eq!(freqs.get(&'z'), None);
+    }
 
     #[test]
-    fn char_freqencies() {
+    fn char_freqencies_from_file() {
         let corpus = fs::read_to_string(CORPUS_FILE_PATH).expect("Corpus not found");
         let freqs = char_frequencies(&corpus);
+
         let mut vec = freqs.iter().collect::<Vec<_>>();
         vec.sort_by(|a, b| (a.1).partial_cmp(b.1).unwrap());
         println!("{:#?}", vec);
