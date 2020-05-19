@@ -39,6 +39,11 @@ mod tests {
         let corpus = "🦀doing cryptopals in rust🦀";
         let freqs = frequencies(&corpus);
 
+        for (_, v) in freqs.iter() {
+            assert!(v.is_normal());
+            assert!(v.is_sign_positive())
+        }
+
         assert_eq!(freqs.len(), 16);
         assert_eq!(*freqs.get(&' ').unwrap(), 3.0 / corpus.len() as f64);
         assert_eq!(*freqs.get(&'🦀').unwrap(), 2.0 / corpus.len() as f64);
