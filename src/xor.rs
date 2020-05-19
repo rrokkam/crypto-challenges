@@ -13,21 +13,22 @@ fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
     buffer.iter().map(|b| b ^ c).collect()
 }
 
-fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &HashMap<char, f64>) -> (f64, String) {
+/// Will return None if none of the xors yielded a valid UTF8 encoding
+fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &HashMap<char, f64>) -> Option<(f64, String)> {
     (u8::MIN..=u8::MAX)
         .map(|c| String::from_utf8(single_byte_xor(ciphertext, c)))
         .filter_map(Result::ok)
         .map(|text| (score::score(&text, freqs), text))
         .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
-        .expect("No single byte xor produced a valid UTF8-encoded string")
 }
 
 fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &HashMap<char, f64>) -> String {
     ciphertexts
         .iter()
         .map(|&ciphertext| decrypt_single_byte_xor(ciphertext, freqs))
+        .filter_map(|x| x)
         .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
-        .unwrap()
+        .unwrap() // assert that at least one decoding was valid. TODO: remove this and return Option<String> instead.
         .1
 }
 
@@ -60,7 +61,7 @@ mod tests {
         let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
         let freqs = score::frequencies(&corpus);
 
-        let (_, plaintext_guess) = decrypt_single_byte_xor(&ciphertext, &freqs);
+        let (_, plaintext_guess) = decrypt_single_byte_xor(&ciphertext, &freqs).unwrap();
         assert_eq!(plaintext_guess, "Cooking MC's like a pound of bacon");
     }
 
