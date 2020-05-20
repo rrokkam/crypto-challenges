@@ -40,6 +40,13 @@ fn repeating_key_xor(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
         .collect()
 }
 
+fn edit_distance(first: &[u8], second: &[u8]) -> u32 {
+    fixed_xor(first, second)
+        .iter()
+        .map(|&a| a.count_ones())
+        .sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -100,9 +107,20 @@ mod tests {
 
         let result = repeating_key_xor(&plaintext, key);
 
-        let expected = hex_literal::hex!("0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272
-            a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f").to_vec();
-        
+        let expected = hex_literal::hex!(
+            "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272
+            a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"
+        )
+        .to_vec();
+
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_edit_distance() {
+        let first = b"this is a test";
+        let second = b"wokka wokka!!!";
+
+        assert_eq!(edit_distance(first, second), 37);
     }
 }
