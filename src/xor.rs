@@ -1,14 +1,6 @@
 use crate::score;
 use std::collections::HashMap;
 
-fn fixed_xor(first: &[u8], second: &[u8]) -> Vec<u8> {
-    first
-        .iter()
-        .zip(second.iter())
-        .map(|(a, b)| a ^ b)
-        .collect()
-}
-
 fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
     buffer.iter().map(|b| b ^ c).collect()
 }
@@ -32,12 +24,29 @@ fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &HashMap<char, f64>) -> 
         .1
 }
 
+fn fixed_xor(first: &[u8], second: &[u8]) -> Vec<u8> {
+    first
+        .iter()
+        .zip(second.iter())
+        .map(|(a, b)| a ^ b)
+        .collect()
+}
+
+fn repeating_key_xor(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
+    ciphertext
+        .iter()
+        .zip(key.iter().cycle())
+        .map(|(a, b)| a ^ b)
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use hex;
     use hex_literal;
     use std::fs;
+    use std::io::BufRead;
 
     const CORPUS_FILE_PATH: &str = "ulysses.txt";
 
@@ -81,5 +90,19 @@ mod tests {
         let plaintext_guess = find_single_byte_xor(ciphertexts, &freqs);
 
         assert_eq!(plaintext_guess, "Now that the party is jumping\n");
+    }
+
+    #[test]
+    fn test_repeating_key_xor() {
+        let plaintext: Vec<u8> =
+            b"Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal".to_vec();
+        let key: &[u8] = b"ICE";
+
+        let result = repeating_key_xor(&plaintext, key);
+
+        let expected = hex_literal::hex!("0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272
+            a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f").to_vec();
+        
+        assert_eq!(result, expected);
     }
 }
