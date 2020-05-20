@@ -66,20 +66,20 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_find_single_byte_xor() {
-        let ciphertexts = fs::read("single_byte_xored.txt").unwrap();
-
-        let texts: Vec<Vec<u8>> = ciphertexts
-            .split(|&c| c == b'\n')
-            .map(|ciphertext| hex::decode(ciphertext).unwrap())
+        let ciphertexts: Vec<Vec<u8>> = fs::read("single_byte_xored.txt")
+            .unwrap()
+            .lines()
+            .map(|ciphertext| hex::decode(ciphertext.unwrap()).unwrap())
             .collect();
-        let texts = texts.iter().map(|item| item.as_slice()).collect();
+
+        let ciphertexts = ciphertexts.iter().map(|item| item.as_slice()).collect();
 
         let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
         let freqs = score::frequencies(&corpus);
 
-        let plaintext_guess = find_single_byte_xor(texts, &freqs);
-        assert_eq!(plaintext_guess, "Now that the party is jumping");
+        let plaintext_guess = find_single_byte_xor(ciphertexts, &freqs);
+
+        assert_eq!(plaintext_guess, "Now that the party is jumping\n");
     }
 }
