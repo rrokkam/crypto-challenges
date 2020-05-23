@@ -1,4 +1,5 @@
 use crate::score;
+use std::cmp;
 use std::collections::HashMap;
 
 fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
@@ -45,6 +46,37 @@ fn edit_distance(first: &[u8], second: &[u8]) -> u32 {
         .iter()
         .map(|&a| a.count_ones())
         .sum()
+}
+
+fn weighted_edit_distance(first: &[u8], second: &[u8]) -> f64 {
+    if first.len() != second.len() {
+        panic!("Weighted edit distance on slices of different sizes")
+    }
+    edit_distance(first, second) as f64 / first.len() as f64
+}
+
+fn find_repeating_xor_key_length(ciphertext: &[u8]) -> usize {
+    let compare_blocks =
+        |a| weighted_edit_distance(&ciphertext[..a - 1], &ciphertext[a..(a * 2 - 1)]) / a as f64;
+
+    (2..cmp::min(40, 2 * ciphertext.len()))
+        .min_by(|&n, &m| { compare_blocks(n).partial_cmp(&compare_blocks(m)) }.unwrap())
+        .unwrap()
+}
+
+fn break_repeating_key_xor(ciphertext: &[u8]) -> String {
+    let chunk_size = find_repeating_xor_key_length(ciphertext);
+    let blocks = ciphertext.chunks(chunk_size);
+    let mut transposed: Vec<Vec<u8>> = Vec::with_capacity(chunk_size);
+    for block in blocks {
+        for (i, &c) in (0..chunk_size).zip(block) {
+            transposed[i].push(c);
+        }
+    }
+    for group in transposed {
+        // get the byte for the key
+    }
+    String::new() // concatenate the bytes obtained for each key
 }
 
 #[cfg(test)]
@@ -122,5 +154,15 @@ mod tests {
         let second = b"wokka wokka!!!";
 
         assert_eq!(edit_distance(first, second), 37);
+    }
+
+    #[test]
+    fn test_break_repeating_key_xor() {
+        let ciphertext = base64::decode(fs::read_to_string("repeating_key_xored.txt").unwrap()).unwrap();
+
+        let plaintext_guess = break_repeating_key_xor(&ciphertext);
+
+        println!("{}", plaintext_guess);
+        panic!("print");
     }
 }
