@@ -2,6 +2,33 @@ use crate::score;
 use std::cmp;
 use std::collections::HashMap;
 
+fn xor_with<B>(buffer: B, byte: u8) -> Vec<u8>
+where
+    B: IntoIterator<Item = u8>,
+{
+    buffer.into_iter().map(|b| b ^ byte).collect()
+}
+
+fn xor_to_string<B>(buffer: B, byte: u8) -> Option<String>
+where
+    B: IntoIterator<Item = u8>,
+{
+    String::from_utf8(xor_with(buffer, byte)).ok()
+}
+
+fn break_single_byte_xor<B>(buffer: B, freqs: &HashMap<char, f64>) -> Option<String>
+where
+    B: IntoIterator<Item = u8> + Clone,
+{
+    (u8::MIN..=u8::MAX)
+        .filter_map(|n| xor_to_string(buffer.clone(), n))
+        .max_by(|a, b| {
+            score::score(a, freqs)
+                .partial_cmp(&score::score(b, freqs))
+                .unwrap()
+        })
+}
+
 fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
     buffer.iter().map(|b| b ^ c).collect()
 }
@@ -9,8 +36,7 @@ fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
 /// Will return None if none of the xors yielded a valid UTF8 encoding
 fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &HashMap<char, f64>) -> Option<(f64, String)> {
     (u8::MIN..=u8::MAX)
-        .map(|c| String::from_utf8(single_byte_xor(ciphertext, c)))
-        .filter_map(Result::ok)
+        .filter_map(|c| String::from_utf8(single_byte_xor(ciphertext, c)).ok())
         .map(|text| (score::score(&text, freqs), text))
         .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
 }
@@ -158,7 +184,8 @@ mod tests {
 
     #[test]
     fn test_break_repeating_key_xor() {
-        let ciphertext = base64::decode(fs::read_to_string("repeating_key_xored.txt").unwrap()).unwrap();
+        let ciphertext =
+            base64::decode(fs::read_to_string("repeating_key_xored.txt").unwrap()).unwrap();
 
         let plaintext_guess = break_repeating_key_xor(&ciphertext);
 
