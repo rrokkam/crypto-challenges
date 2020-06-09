@@ -1,4 +1,4 @@
-use crate::score;
+use crate::score::Scorer;
 use std::cmp;
 use std::collections::HashMap;
 
@@ -16,17 +16,13 @@ where
     String::from_utf8(xor_with(buffer, byte)).ok()
 }
 
-fn break_single_byte_xor<B>(buffer: B, freqs: &HashMap<char, f64>) -> Option<String>
+fn break_single_byte_xor<B>(buffer: B, freqs: &Scorer) -> Option<String>
 where
     B: IntoIterator<Item = u8> + Clone,
 {
     (u8::MIN..=u8::MAX)
         .filter_map(|n| xor_to_string(buffer.clone(), n))
-        .max_by(|a, b| {
-            score::score(a, freqs)
-                .partial_cmp(&score::score(b, freqs))
-                .unwrap()
-        })
+        .max_by(|a, b| freqs.score(a).partial_cmp(&freqs.score(b)).unwrap())
 }
 
 fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
@@ -34,14 +30,14 @@ fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
 }
 
 /// Will return None if none of the xors yielded a valid UTF8 encoding
-fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &HashMap<char, f64>) -> Option<(f64, String)> {
+fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(f64, String)> {
     (u8::MIN..=u8::MAX)
         .filter_map(|c| String::from_utf8(single_byte_xor(ciphertext, c)).ok())
-        .map(|text| (score::score(&text, freqs), text))
+        .map(|text| (freqs.score(&text), text))
         .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
 }
 
-fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &HashMap<char, f64>) -> String {
+fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &Scorer) -> String {
     ciphertexts
         .iter()
         .map(|&ciphertext| decrypt_single_byte_xor(ciphertext, freqs))
@@ -133,7 +129,7 @@ mod tests {
             "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
         );
         let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
-        let freqs = score::frequencies(&corpus);
+        let freqs = Scorer::new(&corpus);
 
         let (_, plaintext_guess) = decrypt_single_byte_xor(&ciphertext, &freqs).unwrap();
         assert_eq!(plaintext_guess, "Cooking MC's like a pound of bacon");
@@ -150,7 +146,7 @@ mod tests {
         let ciphertexts = ciphertexts.iter().map(|item| item.as_slice()).collect();
 
         let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
-        let freqs = score::frequencies(&corpus);
+        let freqs = Scorer::new(&corpus);
 
         let plaintext_guess = find_single_byte_xor(ciphertexts, &freqs);
 

@@ -1,94 +1,61 @@
 use std::collections::HashMap;
 
-pub fn frequencies(corpus: &str) -> HashMap<char, f64> {
-    corpus
-        .chars()
-        .fold(HashMap::new(), |mut acc, c| {
-            *acc.entry(c).or_insert(0) += 1;
-            acc
-        })
-        .into_iter()
-        .map(|(c, count)| (c, count as f64 / corpus.len() as f64))
-        .collect()
+pub struct Scorer {
+    frequencies: HashMap<char, f64>,
 }
 
-pub fn score(text: &str, freqs: &HashMap<char, f64>) -> f64 {
-    let text_len = text.chars().count();
-    if text_len == 0 {
-        return 0.0;
+impl Scorer {
+    pub fn new(corpus: &str) -> Self {
+        let frequencies = corpus
+            .chars()
+            .fold(HashMap::new(), |mut acc, c| {
+                *acc.entry(c).or_insert(0) += 1;
+                acc
+            })
+            .into_iter()
+            .map(|(c, count)| (c, count as f64 / corpus.len() as f64))
+            .collect();
+
+        Scorer { frequencies }
     }
 
-    text.chars()
-        .map(|c| *freqs.get(&c).unwrap_or(&0.0))
-        .sum::<f64>()
-        / text_len as f64
+    pub fn score(&self, text: &str) -> f64 {
+        let text_len = text.chars().count();
+        if text_len == 0 {
+            return 0.0;
+        }
+
+        text.chars()
+            .map(|c| *self.frequencies.get(&c).unwrap_or(&0.0))
+            .sum::<f64>()
+            / text_len as f64
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
-
-    const CORPUS_FILE_PATH: &str = "ulysses.txt";
 
     #[test]
-    fn frequencies_from_empty_corpus() {
-        let corpus = "";
-        let freqs = frequencies(&corpus);
+    fn small_corpus() {
+        let corpus = "doing cryptopals in rust";
+        let freqs = Scorer::new(&corpus);
 
-        assert_eq!(freqs, HashMap::new());
+        assert_eq!(freqs.score(" "), 3.0 / corpus.len() as f64);
+        assert_eq!(freqs.score("z"), 0.0);
     }
 
     #[test]
-    fn frequencies_from_small_corpus() {
-        let corpus = "🦀doing cryptopals in rust🦀";
-        let freqs = frequencies(&corpus);
-
-        for (_, v) in freqs.iter() {
-            assert!(v.is_normal());
-            assert!(v.is_sign_positive())
-        }
-
-        assert_eq!(freqs.len(), 16);
-        assert_eq!(*freqs.get(&' ').unwrap(), 3.0 / corpus.len() as f64);
-        assert_eq!(*freqs.get(&'🦀').unwrap(), 2.0 / corpus.len() as f64);
-        assert_eq!(freqs.get(&'z'), None);
+    fn empty_text() {
+        let freqs = Scorer::new("doing cryptopals in rust");
+        assert_eq!(freqs.score(""), 0.0);
     }
 
     #[test]
-    fn freqencies_from_large_corpus() {
-        let corpus = fs::read_to_string(CORPUS_FILE_PATH).expect("Corpus not found");
-        let freqs = frequencies(&corpus);
-
-        for (_, v) in freqs.iter() {
-            assert!(v.is_normal());
-            assert!(v.is_sign_positive())
-        }
-
-        let most_common_char = freqs
-            .iter()
-            .max_by(|a, b| (a.1).partial_cmp(&b.1).unwrap())
-            .unwrap()
-            .0;
-
-        assert_eq!(most_common_char, &' ');
-    }
-
-    #[test]
-    fn score_with_empty_text() {
-        let text = "";
-        let corpus = "🦀doing cryptopals in rust🦀";
-        let freqs = frequencies(&corpus);
-
-        assert_eq!(score(text, &freqs), 0.0);
-    }
-
-    #[test]
-    fn score_with_empty_corpus() {
+    fn empty_corpus() {
+        let freqs = Scorer::new("");
         let text = "🦀 is a crab emoji";
-        let corpus = "";
-        let freqs = frequencies(&corpus);
 
-        assert_eq!(score(text, &freqs), 0.0);
+        assert_eq!(freqs.score(text), 0.0);
     }
 }
