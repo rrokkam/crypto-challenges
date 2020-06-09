@@ -37,25 +37,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn small_corpus() {
+    fn empty() {
+        let freqs = Scorer::new("");
+
+        assert_eq!(freqs.score("🦀 is a crab emoji"), 0.0);
+    }
+
+    #[test]
+    fn nonempty() {
         let corpus = "doing cryptopals in rust";
         let freqs = Scorer::new(&corpus);
 
-        assert_eq!(freqs.score(" "), 3.0 / corpus.len() as f64);
-        assert_eq!(freqs.score("z"), 0.0);
-    }
-
-    #[test]
-    fn empty_text() {
-        let freqs = Scorer::new("doing cryptopals in rust");
         assert_eq!(freqs.score(""), 0.0);
-    }
-
-    #[test]
-    fn empty_corpus() {
-        let freqs = Scorer::new("");
-        let text = "🦀 is a crab emoji";
-
-        assert_eq!(freqs.score(text), 0.0);
+        assert_eq!(freqs.score("z"), 0.0);
+        assert_eq!(freqs.score(" "), 3.0 / corpus.len() as f64);
+        assert_eq!(freqs.score(" a"), 2.0 / corpus.len() as f64);
     }
 }
