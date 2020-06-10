@@ -21,8 +21,12 @@ impl Scorer {
     pub fn score(&self, text: &str) -> f64 {
         match text.chars().count() {
             0 => 0.0,
-            len => text.chars().fold(0, |acc, c| acc + self.count_of(c)) as f64 / len as f64,
+            len => self.total_count_of(text) as f64 / len as f64,
         }
+    }
+
+    fn total_count_of(&self, text: &str) -> usize {
+        text.chars().fold(0, |acc, c| acc + self.count_of(c))
     }
 
     fn count_of(&self, c: char) -> usize {
