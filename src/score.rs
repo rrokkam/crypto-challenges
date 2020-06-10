@@ -2,14 +2,11 @@ use ordered_float::NotNan;
 use std::collections::HashMap;
 
 #[derive(PartialOrd, Ord, PartialEq, Eq)]
-pub struct Score {
-    value: NotNan<f64>,
-}
+pub struct Score(NotNan<f64>);
 
 impl Score {
     pub fn new(score: f64) -> Self {
-        let value = NotNan::new(score).unwrap();
-        Score { value }
+        Score(NotNan::new(score).unwrap())
     }
 }
 
