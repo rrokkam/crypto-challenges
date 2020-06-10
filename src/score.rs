@@ -11,21 +11,21 @@ impl Scorer {
     }
 
     fn build_counts(corpus: &str) -> HashMap<char, usize> {
-        corpus.chars().fold(HashMap::new(), |mut acc, c| {
-            *acc.entry(c).or_insert(0) += 1;
-            acc
-        })
+        let mut counts = HashMap::new();
+        for character in corpus.chars() {
+            *counts.entry(character).or_insert(0) += 1;
+        }
+        counts
     }
 
     pub fn score(&self, text: &str) -> f64 {
-        if text == "" {
-            return 0.0;
+        match text.chars().count() {
+            0 => 0.0,
+            len => text.chars().fold(0, |acc, c| acc + self.count_of(c)) as f64 / len as f64,
         }
-
-        text.chars().map(|c| self.count(c)).sum::<usize>() as f64 / text.chars().count() as f64
     }
 
-    fn count(&self, c: char) -> usize {
+    fn count_of(&self, c: char) -> usize {
         *self.counts.get(&c).unwrap_or(&0)
     }
 }
@@ -36,8 +36,7 @@ mod tests {
 
     #[test]
     fn empty() {
-        let counts = Scorer::build_counts("");
-        let scorer = Scorer { counts };
+        let scorer = Scorer::new("");
 
         assert_eq!(scorer.score("🦀 is a crab emoji"), 0.0);
     }
@@ -49,7 +48,7 @@ mod tests {
 
         assert_eq!(scorer.score(""), 0.0);
         assert_eq!(scorer.score("z"), 0.0);
-        assert_eq!(scorer.score(" "), 3.0 / corpus.len() as f64);
-        assert_eq!(scorer.score(" a"), 2.0 / corpus.len() as f64);
+        assert_eq!(scorer.score(" "), 3.0);
+        assert_eq!(scorer.score(" a"), (3.0 + 1.0) / 2.0);
     }
 }
