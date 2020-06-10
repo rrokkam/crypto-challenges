@@ -6,13 +6,9 @@ fn xor_with(buffer: &[u8], byte: u8) -> Vec<u8> {
     buffer.into_iter().map(|b| b ^ byte).collect()
 }
 
-fn xor_to_string(buffer: &[u8], byte: u8) -> Option<String> {
-    String::from_utf8(xor_with(buffer, byte)).ok()
-}
-
 fn break_single_byte_xor(buffer: Vec<u8>, freqs: &Scorer) -> Option<String> {
     (u8::MIN..=u8::MAX)
-        .filter_map(|byte| xor_to_string(&buffer.clone(), byte))
+        .filter_map(|byte| String::from_utf8(xor_with(&buffer.clone(), byte)).ok())
         .max_by_key(|text| freqs.score(text))
 }
 
