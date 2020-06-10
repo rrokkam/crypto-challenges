@@ -2,26 +2,17 @@ use crate::score::Scorer;
 use std::cmp;
 use std::collections::HashMap;
 
-fn xor_with<B>(buffer: B, byte: u8) -> Vec<u8>
-where
-    B: IntoIterator<Item = u8>,
-{
+fn xor_with(buffer: &[u8], byte: u8) -> Vec<u8> {
     buffer.into_iter().map(|b| b ^ byte).collect()
 }
 
-fn xor_to_string<B>(buffer: B, byte: u8) -> Option<String>
-where
-    B: IntoIterator<Item = u8>,
-{
+fn xor_to_string(buffer: &[u8], byte: u8) -> Option<String> {
     String::from_utf8(xor_with(buffer, byte)).ok()
 }
 
-fn break_single_byte_xor<B>(buffer: B, freqs: &Scorer) -> Option<String>
-where
-    B: IntoIterator<Item = u8> + Clone,
-{
+fn break_single_byte_xor(buffer: Vec<u8>, freqs: &Scorer) -> Option<String> {
     (u8::MIN..=u8::MAX)
-        .filter_map(|n| xor_to_string(buffer.clone(), n))
+        .filter_map(|n| xor_to_string(&buffer.clone(), n))
         .max_by(|a, b| freqs.score(a).partial_cmp(&freqs.score(b)).unwrap())
 }
 
