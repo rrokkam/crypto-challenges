@@ -1,4 +1,4 @@
-use crate::score::Scorer;
+use crate::score::{Score, Scorer};
 use std::cmp;
 use std::collections::HashMap;
 
@@ -12,8 +12,8 @@ fn xor_to_string(buffer: &[u8], byte: u8) -> Option<String> {
 
 fn break_single_byte_xor(buffer: Vec<u8>, freqs: &Scorer) -> Option<String> {
     (u8::MIN..=u8::MAX)
-        .filter_map(|n| xor_to_string(&buffer.clone(), n))
-        .max_by(|a, b| freqs.score(a).partial_cmp(&freqs.score(b)).unwrap())
+        .filter_map(|byte| xor_to_string(&buffer.clone(), byte))
+        .max_by_key(|text| freqs.score(text))
 }
 
 fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
@@ -21,7 +21,7 @@ fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
 }
 
 /// Will return None if none of the xors yielded a valid UTF8 encoding
-fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(f64, String)> {
+fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(Score, String)> {
     (u8::MIN..=u8::MAX)
         .filter_map(|c| String::from_utf8(single_byte_xor(ciphertext, c)).ok())
         .map(|text| (freqs.score(&text), text))

@@ -1,7 +1,7 @@
 use ordered_float::NotNan;
 use std::collections::HashMap;
 
-#[derive(PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
 pub struct Score(NotNan<f64>);
 
 impl Score {
@@ -28,10 +28,10 @@ impl Scorer {
         counts
     }
 
-    pub fn score(&self, text: &str) -> f64 {
+    pub fn score(&self, text: &str) -> Score {
         match text.chars().count() {
-            0 => 0.0,
-            len => self.total_count_in(text) as f64 / len as f64,
+            0 => Score::new(0.0),
+            len => Score::new(self.total_count_in(text) as f64 / len as f64),
         }
     }
 
@@ -51,31 +51,34 @@ mod tests {
     #[test]
     fn empty_corpus() {
         let scorer = Scorer::new("");
-        assert_eq!(scorer.score("🦀 is a crab emoji"), 0.0);
+        assert_eq!(scorer.score("🦀 is a crab emoji"), Score::new(0.0));
     }
 
     #[test]
     fn empty_text() {
         let scorer = Scorer::new("doing cryptopals in rust");
-        assert_eq!(scorer.score(""), 0.0);
+        assert_eq!(scorer.score(""), Score::new(0.0));
     }
 
     #[test]
     fn one_char_not_in_corpus() {
         let scorer = Scorer::new("doing cryptopals in rust");
-        assert_eq!(scorer.score("z"), 0.0);
+        assert_eq!(scorer.score("z"), Score::new(0.0));
     }
 
     #[test]
     fn one_char_in_corpus() {
         let scorer = Scorer::new("doing cryptopals in rust");
-        assert_eq!(scorer.score(" "), 3.0);
-        assert_eq!(scorer.score("a"), 1.0);
+        assert_eq!(scorer.score(" "), Score::new(3.0));
+        assert_eq!(scorer.score("a"), Score::new(1.0));
     }
 
     #[test]
     fn multiple_chars_in_corpus() {
         let scorer = Scorer::new("doing cryptopals in rust");
-        assert_eq!(scorer.score("a z "), (1.0 + 3.0 + 0.0 + 3.0) / 4.0);
+        assert_eq!(
+            scorer.score("a z "),
+            Score::new((1.0 + 3.0 + 0.0 + 3.0) / 4.0)
+        );
     }
 }
