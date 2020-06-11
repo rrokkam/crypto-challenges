@@ -6,21 +6,6 @@ fn xor_with(buffer: &[u8], byte: u8) -> Vec<u8> {
     buffer.into_iter().map(|b| b ^ byte).collect()
 }
 
-fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(Score, String)> {
-    (u8::MIN..=u8::MAX)
-        .filter_map(|byte| String::from_utf8(xor_with(ciphertext, byte)).ok())
-        .max_by_key(|text| freqs.score(text))
-        .map(|text| (freqs.score(&text), text))
-}
-
-fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &Scorer) -> Option<String> {
-    ciphertexts
-        .iter()
-        .filter_map(|&ciphertext| decrypt_single_byte_xor(ciphertext, freqs))
-        .max_by_key(|a| a.0)
-        .map(|a| a.1)
-}
-
 fn fixed_xor(first: &[u8], second: &[u8]) -> Vec<u8> {
     first
         .iter()
@@ -35,6 +20,21 @@ fn repeating_key_xor(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
         .zip(key.iter().cycle())
         .map(|(a, b)| a ^ b)
         .collect()
+}
+
+fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(Score, String)> {
+    (u8::MIN..=u8::MAX)
+        .filter_map(|byte| String::from_utf8(xor_with(ciphertext, byte)).ok())
+        .max_by_key(|text| freqs.score(text))
+        .map(|text| (freqs.score(&text), text))
+}
+
+fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &Scorer) -> Option<String> {
+    ciphertexts
+        .iter()
+        .filter_map(|&ciphertext| decrypt_single_byte_xor(ciphertext, freqs))
+        .max_by_key(|a| a.0)
+        .map(|a| a.1)
 }
 
 fn edit_distance(first: &[u8], second: &[u8]) -> u32 {
