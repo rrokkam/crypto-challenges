@@ -8,6 +8,8 @@ edition = "2018"
 
 [dependencies]
 ordered-float = "1.0"
-hex-literal = "0.2"
 base64 = "0.12"
+
+[dev-dependencies]
+hex-literal = "0.2"
 hex = "0.4"
