@@ -1,7 +1,7 @@
 use ordered_float::NotNan;
 use std::collections::HashMap;
 
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq)]
 pub struct Score(NotNan<f64>);
 
 impl Score {

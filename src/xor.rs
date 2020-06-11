@@ -12,24 +12,18 @@ fn break_single_byte_xor(buffer: Vec<u8>, freqs: &Scorer) -> Option<String> {
         .max_by_key(|text| freqs.score(text))
 }
 
-fn single_byte_xor(buffer: &[u8], c: u8) -> Vec<u8> {
-    buffer.iter().map(|b| b ^ c).collect()
-}
-
-/// Will return None if none of the xors yielded a valid UTF8 encoding
 fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(Score, String)> {
     (u8::MIN..=u8::MAX)
-        .filter_map(|c| String::from_utf8(single_byte_xor(ciphertext, c)).ok())
+        .filter_map(|c| String::from_utf8(xor_with(ciphertext, c)).ok())
+        .max_by_key(|text| freqs.score(text))
         .map(|text| (freqs.score(&text), text))
-        .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
 }
 
 fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &Scorer) -> String {
     ciphertexts
         .iter()
-        .map(|&ciphertext| decrypt_single_byte_xor(ciphertext, freqs))
-        .filter_map(|x| x)
-        .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
+        .filter_map(|&ciphertext| decrypt_single_byte_xor(ciphertext, freqs))
+        .max_by_key(|a| a.0)
         .unwrap() // assert that at least one decoding was valid. TODO: remove this and return Option<String> instead.
         .1
 }
