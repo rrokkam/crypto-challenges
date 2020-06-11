@@ -6,26 +6,19 @@ fn xor_with(buffer: &[u8], byte: u8) -> Vec<u8> {
     buffer.into_iter().map(|b| b ^ byte).collect()
 }
 
-fn break_single_byte_xor(buffer: Vec<u8>, freqs: &Scorer) -> Option<String> {
-    (u8::MIN..=u8::MAX)
-        .filter_map(|byte| String::from_utf8(xor_with(&buffer.clone(), byte)).ok())
-        .max_by_key(|text| freqs.score(text))
-}
-
 fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(Score, String)> {
     (u8::MIN..=u8::MAX)
-        .filter_map(|c| String::from_utf8(xor_with(ciphertext, c)).ok())
+        .filter_map(|byte| String::from_utf8(xor_with(ciphertext, byte)).ok())
         .max_by_key(|text| freqs.score(text))
         .map(|text| (freqs.score(&text), text))
 }
 
-fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &Scorer) -> String {
+fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &Scorer) -> Option<String> {
     ciphertexts
         .iter()
         .filter_map(|&ciphertext| decrypt_single_byte_xor(ciphertext, freqs))
         .max_by_key(|a| a.0)
-        .unwrap() // assert that at least one decoding was valid. TODO: remove this and return Option<String> instead.
-        .1
+        .map(|a| a.1)
 }
 
 fn fixed_xor(first: &[u8], second: &[u8]) -> Vec<u8> {
@@ -129,7 +122,7 @@ mod tests {
         let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
         let freqs = Scorer::new(&corpus);
 
-        let plaintext_guess = find_single_byte_xor(ciphertexts, &freqs);
+        let plaintext_guess = find_single_byte_xor(ciphertexts, &freqs).unwrap();
 
         assert_eq!(plaintext_guess, "Now that the party is jumping\n");
     }
