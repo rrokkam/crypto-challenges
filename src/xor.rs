@@ -1,10 +1,6 @@
 use crate::score::{Score, Scorer};
 use std::{cmp,iter};
 
-fn xor_with(buffer: &[u8], byte: u8) -> Vec<u8> {
-    xor(buffer, iter::once(&byte))
-}
-
 fn xor<'a, T, U>(first: T, second: U) -> Vec<u8>
 where
     T: IntoIterator<Item = &'a u8>,
@@ -15,6 +11,10 @@ where
         .zip(second.into_iter())
         .map(|(&a, &b)| a ^ b)
         .collect()
+}
+
+fn xor_with(buffer: &[u8], byte: u8) -> Vec<u8> {
+    xor(buffer, iter::once(&byte))
 }
 
 fn repeating_key_xor(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
