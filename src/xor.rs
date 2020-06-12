@@ -1,25 +1,24 @@
 use crate::score::{Score, Scorer};
-use std::cmp;
-use std::collections::HashMap;
+use std::{cmp,iter};
 
 fn xor_with(buffer: &[u8], byte: u8) -> Vec<u8> {
-    buffer.into_iter().map(|b| b ^ byte).collect()
+    xor(buffer, iter::once(&byte))
 }
 
-fn fixed_xor(first: &[u8], second: &[u8]) -> Vec<u8> {
+fn xor<'a, T, U>(first: T, second: U) -> Vec<u8>
+where
+    T: IntoIterator<Item = &'a u8>,
+    U: IntoIterator<Item = &'a u8>,
+{
     first
-        .iter()
-        .zip(second.iter())
-        .map(|(a, b)| a ^ b)
+        .into_iter()
+        .zip(second.into_iter())
+        .map(|(&a, &b)| a ^ b)
         .collect()
 }
 
 fn repeating_key_xor(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
-    ciphertext
-        .iter()
-        .zip(key.iter().cycle())
-        .map(|(a, b)| a ^ b)
-        .collect()
+    xor(ciphertext, key.iter().cycle())
 }
 
 fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(Score, String)> {
@@ -38,10 +37,7 @@ fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &Scorer) -> Option<Strin
 }
 
 fn edit_distance(first: &[u8], second: &[u8]) -> u32 {
-    fixed_xor(first, second)
-        .iter()
-        .map(|&a| a.count_ones())
-        .sum()
+    xor(first, second).iter().map(|&a| a.count_ones()).sum()
 }
 
 fn weighted_edit_distance(first: &[u8], second: &[u8]) -> f64 {
@@ -86,10 +82,10 @@ mod tests {
     const CORPUS_FILE_PATH: &str = "ulysses.txt";
 
     #[test]
-    fn test_fixed_xor() {
+    fn test_xor() {
         let first = hex_literal::hex!("1c0111001f010100061a024b53535009181c");
         let second = hex_literal::hex!("686974207468652062756c6c277320657965");
-        let xored = fixed_xor(&first, &second);
+        let xored = xor(&first, &second);
 
         assert_eq!(
             xored,
