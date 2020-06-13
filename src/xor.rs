@@ -13,17 +13,14 @@ where
         .collect()
 }
 
-fn xor_with(buffer: &[u8], byte: u8) -> Vec<u8> {
-    xor(buffer, iter::once(&byte))
-}
-
 fn repeating_key_xor(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
     xor(ciphertext, key.iter().cycle())
 }
 
 fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(Score, String)> {
     (u8::MIN..=u8::MAX)
-        .filter_map(|byte| String::from_utf8(xor_with(ciphertext, byte)).ok())
+        .map(|byte| xor(ciphertext, iter::once(&byte)))
+        .filter_map(|xored_ciphertext| String::from_utf8(xored_ciphertext).ok())
         .max_by_key(|text| freqs.score(text))
         .map(|text| (freqs.score(&text), text))
 }
