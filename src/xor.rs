@@ -1,5 +1,5 @@
 use crate::score::{Score, Scorer};
-use std::{cmp,iter};
+use std::{cmp, iter};
 
 fn xor<'a, T, U>(first: T, second: U) -> Vec<u8>
 where
