@@ -19,7 +19,7 @@ fn repeating_key_xor(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
 
 fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(Score, String)> {
     (u8::MIN..=u8::MAX)
-        .map(|byte| xor(ciphertext, iter::once(&byte)))
+        .map(|byte| xor(ciphertext, iter::repeat(&byte)))
         .filter_map(|xored_ciphertext| String::from_utf8(xored_ciphertext).ok())
         .max_by_key(|text| freqs.score(text))
         .map(|text| (freqs.score(&text), text))
