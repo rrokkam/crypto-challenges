@@ -54,16 +54,16 @@ fn find_repeating_xor_key_length(ciphertext: &[u8]) -> usize {
 }
 
 fn break_repeating_key_xor(ciphertext: &[u8], freqs: &Scorer) -> String {
-//    best_keysizes(&ciphertext)
-//        .take(4)
-//        .for_each(|| {
-//        .for_each_group(&ciphertext)
-//        .map(|group| decrypt_single_byte_xor(group, freqs))
-//        .concatenate()
-//        })
-//        .map(|key| repeating_key_xor(ciphertext, key))
-//        .filter_map(|xored_ciphertext| String::from_utf8(xored_ciphertext).ok())
-//        .max_by_key(|text| freqs.score(text))
+    //    best_keysizes(&ciphertext)
+    //        .take(4)
+    //        .for_each(|| {
+    //        .for_each_group(&ciphertext)
+    //        .map(|group| decrypt_single_byte_xor(group, freqs))
+    //        .concatenate()
+    //        })
+    //        .map(|key| repeating_key_xor(ciphertext, key))
+    //        .filter_map(|xored_ciphertext| String::from_utf8(xored_ciphertext).ok())
+    //        .max_by_key(|text| freqs.score(text))
     String::new()
 }
 
