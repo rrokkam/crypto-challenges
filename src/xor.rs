@@ -53,19 +53,18 @@ fn find_repeating_xor_key_length(ciphertext: &[u8]) -> usize {
         .unwrap()
 }
 
-fn break_repeating_key_xor(ciphertext: &[u8]) -> String {
-    let chunk_size = find_repeating_xor_key_length(ciphertext);
-    let blocks = ciphertext.chunks(chunk_size);
-    let mut transposed: Vec<Vec<u8>> = Vec::with_capacity(chunk_size);
-    for block in blocks {
-        for (i, &c) in (0..chunk_size).zip(block) {
-            transposed[i].push(c);
-        }
-    }
-    for group in transposed {
-        // get the byte for the key
-    }
-    String::new() // concatenate the bytes obtained for each key
+fn break_repeating_key_xor(ciphertext: &[u8], freqs: &Scorer) -> String {
+//    best_keysizes(&ciphertext)
+//        .take(4)
+//        .for_each(|| {
+//        .for_each_group(&ciphertext)
+//        .map(|group| decrypt_single_byte_xor(group, freqs))
+//        .concatenate()
+//        })
+//        .map(|key| repeating_key_xor(ciphertext, key))
+//        .filter_map(|xored_ciphertext| String::from_utf8(xored_ciphertext).ok())
+//        .max_by_key(|text| freqs.score(text))
+    String::new()
 }
 
 #[cfg(test)]
@@ -150,7 +149,10 @@ mod tests {
         let ciphertext =
             base64::decode(fs::read_to_string("repeating_key_xored.txt").unwrap()).unwrap();
 
-        let plaintext_guess = break_repeating_key_xor(&ciphertext);
+        let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
+        let freqs = Scorer::new(&corpus);
+
+        let plaintext_guess = break_repeating_key_xor(&ciphertext, &freqs);
 
         println!("{}", plaintext_guess);
         panic!("print");
