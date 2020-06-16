@@ -17,15 +17,14 @@ fn repeating_key_xor(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
     xor(ciphertext, key.iter().cycle())
 }
 
-fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(Score, String)> {
+fn decrypt_single_byte_xor(ciphertext: &[u8], freqs: &Scorer) -> Option<(Score, Vec<u8>)> {
     (u8::MIN..=u8::MAX)
         .map(|byte| xor(ciphertext, iter::repeat(&byte)))
-        .filter_map(|xored_ciphertext| String::from_utf8(xored_ciphertext).ok())
         .max_by_key(|text| freqs.score(text))
         .map(|text| (freqs.score(&text), text))
 }
 
-fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &Scorer) -> Option<String> {
+fn find_single_byte_xor(ciphertexts: Vec<&[u8]>, freqs: &Scorer) -> Option<Vec<u8>> {
     ciphertexts
         .iter()
         .filter_map(|&ciphertext| decrypt_single_byte_xor(ciphertext, freqs))
@@ -53,7 +52,7 @@ fn find_repeating_xor_key_length(ciphertext: &[u8]) -> usize {
         .unwrap()
 }
 
-fn break_repeating_key_xor(ciphertext: &[u8], freqs: &Scorer) -> String {
+fn break_repeating_key_xor(ciphertext: &[u8], freqs: &Scorer) -> Vec<u8> {
     //    best_keysizes(&ciphertext)
     //        .take(4)
     //        .for_each(|| {
@@ -64,7 +63,7 @@ fn break_repeating_key_xor(ciphertext: &[u8], freqs: &Scorer) -> String {
     //        .map(|key| repeating_key_xor(ciphertext, key))
     //        .filter_map(|xored_ciphertext| String::from_utf8(xored_ciphertext).ok())
     //        .max_by_key(|text| freqs.score(text))
-    String::new()
+    Vec::new()
 }
 
 #[cfg(test)]
@@ -94,11 +93,11 @@ mod tests {
         let ciphertext = hex_literal::hex!(
             "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
         );
-        let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
+        let corpus = fs::read(CORPUS_FILE_PATH).unwrap();
         let freqs = Scorer::new(&corpus);
 
         let (_, plaintext_guess) = decrypt_single_byte_xor(&ciphertext, &freqs).unwrap();
-        assert_eq!(plaintext_guess, "Cooking MC's like a pound of bacon");
+        assert_eq!(&plaintext_guess[..], &b"Cooking MC's like a pound of bacon"[..]);
     }
 
     #[test]
@@ -111,12 +110,12 @@ mod tests {
 
         let ciphertexts = ciphertexts.iter().map(|item| item.as_slice()).collect();
 
-        let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
+        let corpus = fs::read(CORPUS_FILE_PATH).unwrap();
         let freqs = Scorer::new(&corpus);
 
         let plaintext_guess = find_single_byte_xor(ciphertexts, &freqs).unwrap();
 
-        assert_eq!(plaintext_guess, "Now that the party is jumping\n");
+        assert_eq!(plaintext_guess, b"Now that the party is jumping\n");
     }
 
     #[test]
@@ -149,12 +148,10 @@ mod tests {
         let ciphertext =
             base64::decode(fs::read_to_string("repeating_key_xored.txt").unwrap()).unwrap();
 
-        let corpus = fs::read_to_string(CORPUS_FILE_PATH).unwrap();
+        let corpus = fs::read(CORPUS_FILE_PATH).unwrap();
         let freqs = Scorer::new(&corpus);
 
         let plaintext_guess = break_repeating_key_xor(&ciphertext, &freqs);
-
-        println!("{}", plaintext_guess);
-        panic!("print");
+        assert!(true);
     }
 }
