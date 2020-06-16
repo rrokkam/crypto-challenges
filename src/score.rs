@@ -5,7 +5,7 @@ use std::collections::HashMap;
 pub struct Score(NotNan<f64>);
 
 impl Score {
-    pub fn new(score: f64) -> Self {
+    fn new(score: f64) -> Self {
         Score(NotNan::new(score).unwrap())
     }
 }
