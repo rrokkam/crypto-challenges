@@ -36,41 +36,37 @@ fn edit_distance(first: &[u8], second: &[u8]) -> u32 {
     xor(first, second).iter().map(|&a| a.count_ones()).sum()
 }
 
-fn weighted_edit_distance(first: &[u8], second: &[u8]) -> f64 {
-    if first.len() != second.len() {
-        panic!("Weighted edit distance on slices of different sizes")
-    }
-    edit_distance(first, second) as f64 / first.len() as f64
+fn keysize_score(ciphertext: &[u8], keysize: usize) -> f64 {
+    let first = &ciphertext[..keysize];
+    let second = &ciphertext[keysize..(keysize * 2)];
+    edit_distance(first, second) as f64 / keysize as f64
 }
 
-fn find_repeating_xor_key_length(ciphertext: &[u8]) -> usize {
-    let compare_blocks =
-        |a| weighted_edit_distance(&ciphertext[..a - 1], &ciphertext[a..(a * 2 - 1)]) / a as f64;
+fn best_keysizes(ciphertext: &[u8]) -> Vec<usize> {
+    let mut sorted_keysizes = (2..cmp::min(40, 2 * ciphertext.len()))
+        .map(|keysize| (keysize, keysize_score(ciphertext, keysize)))
+        .collect::<Vec<_>>();
+    println!("{:?}", sorted_keysizes);
+    sorted_keysizes.sort_by(|n, m| m.1.partial_cmp(&n.1).unwrap());
+    sorted_keysizes.iter().map(|&(size, _)| size).collect()
+}
 
-    (2..cmp::min(40, 2 * ciphertext.len()))
-        .min_by(|&n, &m| { compare_blocks(n).partial_cmp(&compare_blocks(m)) }.unwrap())
-        .unwrap()
+fn break_repeating_key_xor_size(ciphertext: &[u8], freqs: &Scorer, keysize: usize) -> Vec<u8> {
+    todo!()
 }
 
 fn break_repeating_key_xor(ciphertext: &[u8], freqs: &Scorer) -> Vec<u8> {
-    //    best_keysizes(&ciphertext)
-    //        .take(4)
-    //        .for_each(|| {
-    //        .for_each_group(&ciphertext)
-    //        .map(|group| decrypt_single_byte_xor(group, freqs))
-    //        .concatenate()
-    //        })
-    //        .map(|key| repeating_key_xor(ciphertext, key))
-    //        .filter_map(|xored_ciphertext| String::from_utf8(xored_ciphertext).ok())
-    //        .max_by_key(|text| freqs.score(text))
-    Vec::new()
+    best_keysizes(ciphertext)
+        .iter()
+        .take(4)
+        .map(|&keysize| break_repeating_key_xor_size(ciphertext, freqs, keysize))
+        .max_by_key(|plaintext| freqs.score(plaintext))
+        .unwrap()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hex;
-    use hex_literal;
     use std::fs;
     use std::io::BufRead;
 
@@ -147,6 +143,21 @@ mod tests {
     }
 
     #[test]
+    fn test_keysize() {
+        let ciphertext = fs::read_to_string("repeating_key_xored.txt")
+            .unwrap()
+            .replace("\n", "");
+
+        let ciphertext = base64::decode(ciphertext).unwrap();
+
+        assert!((keysize_score(&ciphertext, 2) - 2.5).abs() < std::f64::EPSILON);
+        assert!((keysize_score(&ciphertext, 3) - 2.0).abs() < std::f64::EPSILON);
+        assert!((keysize_score(&ciphertext, 4) - 3.5).abs() < std::f64::EPSILON);
+        assert!((keysize_score(&ciphertext, 5) - 1.2).abs() < std::f64::EPSILON);
+        assert!((keysize_score(&ciphertext, 16) - 3.0).abs() < std::f64::EPSILON);
+    }
+
+    #[test]
     fn test_break_repeating_key_xor() {
         let ciphertext = fs::read_to_string("repeating_key_xored.txt")
             .unwrap()
@@ -158,6 +169,6 @@ mod tests {
         let freqs = Scorer::new(&corpus);
 
         let plaintext_guess = break_repeating_key_xor(&ciphertext, &freqs);
-        assert!(true);
+        println!("{:?}", plaintext_guess);
     }
 }
