@@ -97,7 +97,10 @@ mod tests {
         let freqs = Scorer::new(&corpus);
 
         let (_, plaintext_guess) = decrypt_single_byte_xor(&ciphertext, &freqs).unwrap();
-        assert_eq!(&plaintext_guess[..], &b"Cooking MC's like a pound of bacon"[..]);
+        assert_eq!(
+            &plaintext_guess[..],
+            &b"Cooking MC's like a pound of bacon"[..]
+        );
     }
 
     #[test]
@@ -145,8 +148,11 @@ mod tests {
 
     #[test]
     fn test_break_repeating_key_xor() {
-        let ciphertext =
-            base64::decode(fs::read_to_string("repeating_key_xored.txt").unwrap()).unwrap();
+        let ciphertext = fs::read_to_string("repeating_key_xored.txt")
+            .unwrap()
+            .replace("\n", "");
+
+        let ciphertext = base64::decode(ciphertext).unwrap();
 
         let corpus = fs::read(CORPUS_FILE_PATH).unwrap();
         let freqs = Scorer::new(&corpus);
