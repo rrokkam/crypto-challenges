@@ -5,13 +5,18 @@ pub fn decrypt_aes_ecb(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
     symm::decrypt(cipher, key, None, ciphertext).unwrap()
 }
 
+pub fn encrypt_aes_ecb(plaintext: &[u8], key: &[u8]) -> Vec<u8> {
+    let cipher = Cipher::aes_128_ecb();
+    symm::encrypt(cipher, key, None, plaintext).unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::fs;
 
     #[test]
-    fn test_decrypt_aes_ecb() {
+    fn test_decrypt_encrypt_aes_ecb() {
         let lines = fs::read_to_string("aes_ecb_mode.txt")
             .unwrap()
             .replace("\n", "");
@@ -102,5 +107,8 @@ mod tests {
             Play that funky music \n";
 
         assert_eq!(plaintext, expected);
+        
+        let encrypted = encrypt_aes_ecb(expected.as_bytes(), key);
+        assert_eq!(encrypted, ciphertext);
     }
 }
